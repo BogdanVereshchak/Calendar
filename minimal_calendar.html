@@ -32,13 +32,64 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 26px;
+        margin-bottom: 20px;
     }
 
     .month-title {
         font-size: 22px;
         font-weight: 650;
         letter-spacing: -0.03em;
+    }
+
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    /* Style switcher controls */
+    .style-picker {
+        display: flex;
+        background: #f4f4f5;
+        border-radius: 12px;
+        padding: 3px;
+        gap: 2px;
+    }
+
+    .style-btn {
+        border: 0;
+        background: transparent;
+        border-radius: 9px;
+        padding: 6px 10px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #71717a;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all .15s ease;
+    }
+
+    .style-btn .preview-icon {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .style-btn.fill-btn .preview-icon {
+        background: currentColor;
+    }
+
+    .style-btn.outline-btn .preview-icon {
+        border: 2px solid currentColor;
+    }
+
+    .style-btn.active {
+        background: #fff;
+        color: #18181b;
+        box-shadow: 0 2px 6px rgba(0,0,0,.06);
     }
 
     .navigation {
@@ -111,7 +162,7 @@
         cursor: pointer;
         display: grid;
         place-items: center;
-        transition: background .15s ease, box-shadow .15s ease, transform .12s ease;
+        transition: background .15s ease, box-shadow .15s ease, color .15s ease, transform .12s ease;
     }
 
     .day:hover {
@@ -127,15 +178,28 @@
         box-shadow: inset 0 0 0 1.5px #d4d4d8;
     }
 
-    .day.selected {
+    /* Style: Fill Circle */
+    .calendar.style-fill .day.selected {
         background: #18181b;
         color: white;
         box-shadow: none;
         font-weight: 600;
     }
 
-    .day.selected:hover {
+    .calendar.style-fill .day.selected:hover {
         background: #27272a;
+    }
+
+    /* Style: Outline Circle */
+    .calendar.style-circle .day.selected {
+        background: transparent;
+        color: #18181b;
+        box-shadow: inset 0 0 0 2px #18181b;
+        font-weight: 600;
+    }
+
+    .calendar.style-circle .day.selected:hover {
+        background: #f4f4f5;
     }
 
     .footer {
@@ -171,6 +235,17 @@
             border-radius: 24px;
         }
 
+        .header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .header-actions {
+            width: 100%;
+            justify-content: space-between;
+        }
+
         .month-title {
             font-size: 20px;
         }
@@ -188,13 +263,25 @@
 </head>
 
 <body>
-<div class="calendar">
+<div class="calendar style-fill" id="calendar">
     <div class="header">
         <div class="month-title" id="monthTitle"></div>
 
-        <div class="navigation">
-            <button class="nav-btn" id="prev" aria-label="Попередній місяць">‹</button>
-            <button class="nav-btn" id="next" aria-label="Наступний місяць">›</button>
+        <div class="header-actions">
+            <!-- Style switch buttons -->
+            <div class="style-picker" role="radiogroup" aria-label="Формат вибору">
+                <button class="style-btn fill-btn active" data-style="fill" type="button" aria-checked="true" role="radio">
+                    <span class="preview-icon"></span> Коло
+                </button>
+                <button class="style-btn outline-btn" data-style="circle" type="button" aria-checked="false" role="radio">
+                    <span class="preview-icon"></span> Круг
+                </button>
+            </div>
+
+            <div class="navigation">
+                <button class="nav-btn" id="prev" aria-label="Попередній місяць">‹</button>
+                <button class="nav-btn" id="next" aria-label="Наступний місяць">›</button>
+            </div>
         </div>
     </div>
 
@@ -230,13 +317,38 @@
 
     const selectedDays = new Set();
 
+    const calendar = document.getElementById("calendar");
     const monthTitle = document.getElementById("monthTitle");
     const daysContainer = document.getElementById("days");
     const selectedCount = document.getElementById("selectedCount");
+    const styleButtons = document.querySelectorAll(".style-btn");
 
     function dateKey(y, m, d) {
         return `${y}-${m}-${d}`;
     }
+
+    // Handle selection style switching
+    styleButtons.forEach(btn => {
+        btn.addEventListener("click", () => {
+            const style = btn.dataset.style;
+            
+            styleButtons.forEach(b => {
+                b.classList.remove("active");
+                b.setAttribute("aria-checked", "false");
+            });
+
+            btn.classList.add("active");
+            btn.setAttribute("aria-checked", "true");
+
+            if (style === "circle") {
+                calendar.classList.remove("style-fill");
+                calendar.classList.add("style-circle");
+            } else {
+                calendar.classList.remove("style-circle");
+                calendar.classList.add("style-fill");
+            }
+        });
+    });
 
     function render() {
         monthTitle.textContent = `${monthNames[month]} ${year}`;
@@ -245,10 +357,9 @@
         const firstDay = new Date(year, month, 1);
         const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-        // JS: Sunday = 0. Перетворюємо на Monday = 0.
+        // JS: Sunday = 0 -> Monday = 0
         const offset = (firstDay.getDay() + 6) % 7;
 
-        // Порожні клітинки перед першим днем.
         for (let i = 0; i < offset; i++) {
             const cell = document.createElement("div");
             cell.className = "day-cell";
@@ -310,23 +421,19 @@
 
     document.getElementById("prev").addEventListener("click", () => {
         month--;
-
         if (month < 0) {
             month = 11;
             year--;
         }
-
         render();
     });
 
     document.getElementById("next").addEventListener("click", () => {
         month++;
-
         if (month > 11) {
             month = 0;
             year++;
         }
-
         render();
     });
 
