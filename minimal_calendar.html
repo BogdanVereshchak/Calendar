@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Мінімалістичний календар</title>
+<style>
+    * { box-sizing: border-box; }
+
+    body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: #f5f5f7;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: #18181b;
+    }
+
+    .calendar {
+        width: min(100%, 440px);
+        background: #fff;
+        border: 1px solid #e8e8eb;
+        border-radius: 28px;
+        padding: 28px;
+        box-shadow: 0 16px 45px rgba(0,0,0,.07);
+    }
+
+    .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 26px;
+    }
+
+    .month-title {
+        font-size: 22px;
+        font-weight: 650;
+        letter-spacing: -0.03em;
+    }
+
+    .navigation {
+        display: flex;
+        gap: 6px;
+    }
+
+    .nav-btn {
+        width: 38px;
+        height: 38px;
+        border: 0;
+        border-radius: 12px;
+        background: #f4f4f5;
+        color: #27272a;
+        font-size: 22px;
+        line-height: 1;
+        cursor: pointer;
+        display: grid;
+        place-items: center;
+        transition: .15s ease;
+    }
+
+    .nav-btn:hover {
+        background: #e9e9ec;
+        transform: translateY(-1px);
+    }
+
+    .weekdays,
+    .days {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        width: 100%;
+    }
+
+    .weekdays {
+        margin-bottom: 8px;
+    }
+
+    .weekday {
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #a1a1aa;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .days {
+        row-gap: 7px;
+    }
+
+    .day-cell {
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .day {
+        width: 42px;
+        height: 42px;
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        color: #27272a;
+        font-size: 14px;
+        font-weight: 450;
+        cursor: pointer;
+        display: grid;
+        place-items: center;
+        transition: background .15s ease, box-shadow .15s ease, transform .12s ease;
+    }
+
+    .day:hover {
+        background: #f1f1f3;
+    }
+
+    .day:active {
+        transform: scale(.93);
+    }
+
+    .day.today {
+        font-weight: 700;
+        box-shadow: inset 0 0 0 1.5px #d4d4d8;
+    }
+
+    .day.selected {
+        background: #18181b;
+        color: white;
+        box-shadow: none;
+        font-weight: 600;
+    }
+
+    .day.selected:hover {
+        background: #27272a;
+    }
+
+    .footer {
+        margin-top: 24px;
+        padding-top: 17px;
+        border-top: 1px solid #ededee;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: #a1a1aa;
+        font-size: 13px;
+    }
+
+    .clear {
+        border: 0;
+        background: transparent;
+        color: #52525b;
+        font-size: 13px;
+        cursor: pointer;
+        padding: 7px 9px;
+        border-radius: 8px;
+    }
+
+    .clear:hover {
+        background: #f4f4f5;
+    }
+
+    @media (max-width: 420px) {
+        body { padding: 14px; }
+
+        .calendar {
+            padding: 22px 16px;
+            border-radius: 24px;
+        }
+
+        .month-title {
+            font-size: 20px;
+        }
+
+        .day-cell {
+            height: 44px;
+        }
+
+        .day {
+            width: 39px;
+            height: 39px;
+        }
+    }
+</style>
+</head>
+
+<body>
+<div class="calendar">
+    <div class="header">
+        <div class="month-title" id="monthTitle"></div>
+
+        <div class="navigation">
+            <button class="nav-btn" id="prev" aria-label="Попередній місяць">‹</button>
+            <button class="nav-btn" id="next" aria-label="Наступний місяць">›</button>
+        </div>
+    </div>
+
+    <div class="weekdays">
+        <div class="weekday">Пн</div>
+        <div class="weekday">Вт</div>
+        <div class="weekday">Ср</div>
+        <div class="weekday">Чт</div>
+        <div class="weekday">Пт</div>
+        <div class="weekday">Сб</div>
+        <div class="weekday">Нд</div>
+    </div>
+
+    <div class="days" id="days"></div>
+
+    <div class="footer">
+        <span id="selectedCount">Нічого не вибрано</span>
+        <button class="clear" id="clear">Очистити</button>
+    </div>
+</div>
+
+<script>
+(() => {
+    const monthNames = [
+        "Січень", "Лютий", "Березень", "Квітень",
+        "Травень", "Червень", "Липень", "Серпень",
+        "Вересень", "Жовтень", "Листопад", "Грудень"
+    ];
+
+    const today = new Date();
+    let year = today.getFullYear();
+    let month = today.getMonth();
+
+    const selectedDays = new Set();
+
+    const monthTitle = document.getElementById("monthTitle");
+    const daysContainer = document.getElementById("days");
+    const selectedCount = document.getElementById("selectedCount");
+
+    function dateKey(y, m, d) {
+        return `${y}-${m}-${d}`;
+    }
+
+    function render() {
+        monthTitle.textContent = `${monthNames[month]} ${year}`;
+        daysContainer.innerHTML = "";
+
+        const firstDay = new Date(year, month, 1);
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        // JS: Sunday = 0. Перетворюємо на Monday = 0.
+        const offset = (firstDay.getDay() + 6) % 7;
+
+        // Порожні клітинки перед першим днем.
+        for (let i = 0; i < offset; i++) {
+            const cell = document.createElement("div");
+            cell.className = "day-cell";
+            daysContainer.appendChild(cell);
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const cell = document.createElement("div");
+            cell.className = "day-cell";
+
+            const button = document.createElement("button");
+            button.className = "day";
+            button.textContent = day;
+            button.type = "button";
+
+            const key = dateKey(year, month, day);
+
+            if (
+                year === today.getFullYear() &&
+                month === today.getMonth() &&
+                day === today.getDate()
+            ) {
+                button.classList.add("today");
+            }
+
+            if (selectedDays.has(key)) {
+                button.classList.add("selected");
+            }
+
+            button.addEventListener("click", () => {
+                if (selectedDays.has(key)) {
+                    selectedDays.delete(key);
+                    button.classList.remove("selected");
+                } else {
+                    selectedDays.add(key);
+                    button.classList.add("selected");
+                }
+
+                updateCount();
+            });
+
+            cell.appendChild(button);
+            daysContainer.appendChild(cell);
+        }
+
+        updateCount();
+    }
+
+    function updateCount() {
+        const count = selectedDays.size;
+
+        if (count === 0) {
+            selectedCount.textContent = "Нічого не вибрано";
+        } else {
+            selectedCount.textContent =
+                `${count} ${count === 1 ? "день" : "днів"} вибрано`;
+        }
+    }
+
+    document.getElementById("prev").addEventListener("click", () => {
+        month--;
+
+        if (month < 0) {
+            month = 11;
+            year--;
+        }
+
+        render();
+    });
+
+    document.getElementById("next").addEventListener("click", () => {
+        month++;
+
+        if (month > 11) {
+            month = 0;
+            year++;
+        }
+
+        render();
+    });
+
+    document.getElementById("clear").addEventListener("click", () => {
+        selectedDays.clear();
+        render();
+    });
+
+    render();
+})();
+</script>
+</body>
+</html>
