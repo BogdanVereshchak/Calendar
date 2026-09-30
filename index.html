@@ -5,6 +5,49 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Мінімалістичний календар</title>
 <style>
+    :root {
+        --bg-body: #f5f5f7;
+        --bg-calendar: #ffffff;
+        --border-calendar: #e8e8eb;
+        --border-divider: #ededee;
+        --text-primary: #18181b;
+        --text-secondary: #52525b;
+        --text-muted: #a1a1aa;
+        --btn-bg: #f4f4f5;
+        --btn-bg-hover: #e9e9ec;
+        --day-hover: #f1f1f3;
+        --today-ring: #d4d4d8;
+        --selected-fill-bg: #18181b;
+        --selected-fill-text: #ffffff;
+        --selected-fill-hover: #27272a;
+        --selected-circle-border: #18181b;
+        --shadow: rgba(0, 0, 0, 0.07);
+        --pill-active-bg: #ffffff;
+        --pill-active-text: #18181b;
+    }
+
+    /* Стилі темної теми */
+    body.dark-theme {
+        --bg-body: #121214;
+        --bg-calendar: #1c1c1f;
+        --border-calendar: #2e2e33;
+        --border-divider: #27272a;
+        --text-primary: #f4f4f5;
+        --text-secondary: #a1a1aa;
+        --text-muted: #71717a;
+        --btn-bg: #27272a;
+        --btn-bg-hover: #323236;
+        --day-hover: #2a2a2e;
+        --today-ring: #52525b;
+        --selected-fill-bg: #f4f4f5;
+        --selected-fill-text: #18181b;
+        --selected-fill-hover: #e4e4e7;
+        --selected-circle-border: #f4f4f5;
+        --shadow: rgba(0, 0, 0, 0.4);
+        --pill-active-bg: #323236;
+        --pill-active-text: #ffffff;
+    }
+
     * { box-sizing: border-box; }
 
     body {
@@ -14,18 +57,53 @@
         align-items: center;
         justify-content: center;
         padding: 24px;
-        background: #f5f5f7;
+        background: var(--bg-body);
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        color: #18181b;
+        color: var(--text-primary);
+        transition: background .2s ease, color .2s ease;
+    }
+
+    /* Кнопка перемикання теми */
+    .theme-toggle-wrapper {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 100;
+    }
+
+    .theme-toggle-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: var(--bg-calendar);
+        border: 1px solid var(--border-calendar);
+        color: var(--text-primary);
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        box-shadow: 0 4px 14px var(--shadow);
+        transition: transform .15s ease, background .2s ease;
+        font-size: 19px;
+    }
+
+    .theme-toggle-btn:hover {
+        transform: scale(1.06);
+    }
+
+    @media print {
+        .theme-toggle-wrapper {
+            display: none !important;
+        }
     }
 
     .calendar {
-        width: min(100%, 440px);
-        background: #fff;
-        border: 1px solid #e8e8eb;
+        width: min(100%, 460px);
+        background: var(--bg-calendar);
+        border: 1px solid var(--border-calendar);
         border-radius: 28px;
         padding: 28px;
-        box-shadow: 0 16px 45px rgba(0,0,0,.07);
+        box-shadow: 0 16px 45px var(--shadow);
+        transition: background .2s ease, border-color .2s ease;
     }
 
     .header {
@@ -33,12 +111,15 @@
         align-items: center;
         justify-content: space-between;
         margin-bottom: 20px;
+        gap: 16px; /* Додатковий простір між заголовком та кнопками */
     }
 
     .month-title {
         font-size: 22px;
         font-weight: 650;
         letter-spacing: -0.03em;
+        white-space: nowrap;
+        margin-right: 8px; /* Гарантована відстань праворуч від тексту */
     }
 
     .header-actions {
@@ -47,10 +128,9 @@
         gap: 12px;
     }
 
-    /* Style switcher controls */
     .style-picker {
         display: flex;
-        background: #f4f4f5;
+        background: var(--btn-bg);
         border-radius: 12px;
         padding: 3px;
         gap: 2px;
@@ -60,10 +140,10 @@
         border: 0;
         background: transparent;
         border-radius: 9px;
-        padding: 6px 10px;
-        font-size: 11px;
+        padding: 6px 11px;
+        font-size: 12px;
         font-weight: 600;
-        color: #71717a;
+        color: var(--text-muted);
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -87,9 +167,9 @@
     }
 
     .style-btn.active {
-        background: #fff;
-        color: #18181b;
-        box-shadow: 0 2px 6px rgba(0,0,0,.06);
+        background: var(--pill-active-bg);
+        color: var(--pill-active-text);
+        box-shadow: 0 2px 6px rgba(0,0,0,.15);
     }
 
     .navigation {
@@ -102,8 +182,8 @@
         height: 38px;
         border: 0;
         border-radius: 12px;
-        background: #f4f4f5;
-        color: #27272a;
+        background: var(--btn-bg);
+        color: var(--text-primary);
         font-size: 22px;
         line-height: 1;
         cursor: pointer;
@@ -113,7 +193,7 @@
     }
 
     .nav-btn:hover {
-        background: #e9e9ec;
+        background: var(--btn-bg-hover);
         transform: translateY(-1px);
     }
 
@@ -133,7 +213,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #a1a1aa;
+        color: var(--text-muted);
         font-size: 11px;
         font-weight: 600;
         text-transform: uppercase;
@@ -156,7 +236,7 @@
         border: 0;
         border-radius: 50%;
         background: transparent;
-        color: #27272a;
+        color: var(--text-primary);
         font-size: 14px;
         font-weight: 450;
         cursor: pointer;
@@ -166,7 +246,7 @@
     }
 
     .day:hover {
-        background: #f1f1f3;
+        background: var(--day-hover);
     }
 
     .day:active {
@@ -175,48 +255,48 @@
 
     .day.today {
         font-weight: 700;
-        box-shadow: inset 0 0 0 1.5px #d4d4d8;
+        box-shadow: inset 0 0 0 1.5px var(--today-ring);
     }
 
-    /* Style: Fill Circle */
+    /* Стиль: Круг */
     .calendar.style-fill .day.selected {
-        background: #18181b;
-        color: white;
+        background: var(--selected-fill-bg);
+        color: var(--selected-fill-text);
         box-shadow: none;
         font-weight: 600;
     }
 
     .calendar.style-fill .day.selected:hover {
-        background: #27272a;
+        background: var(--selected-fill-hover);
     }
 
-    /* Style: Outline Circle */
+    /* Стиль: Коло */
     .calendar.style-circle .day.selected {
         background: transparent;
-        color: #18181b;
-        box-shadow: inset 0 0 0 2px #18181b;
+        color: var(--text-primary);
+        box-shadow: inset 0 0 0 2px var(--selected-circle-border);
         font-weight: 600;
     }
 
     .calendar.style-circle .day.selected:hover {
-        background: #f4f4f5;
+        background: var(--day-hover);
     }
 
     .footer {
         margin-top: 24px;
         padding-top: 17px;
-        border-top: 1px solid #ededee;
+        border-top: 1px solid var(--border-divider);
         display: flex;
         align-items: center;
         justify-content: space-between;
-        color: #a1a1aa;
+        color: var(--text-muted);
         font-size: 13px;
     }
 
     .clear {
         border: 0;
         background: transparent;
-        color: #52525b;
+        color: var(--text-secondary);
         font-size: 13px;
         cursor: pointer;
         padding: 7px 9px;
@@ -224,11 +304,16 @@
     }
 
     .clear:hover {
-        background: #f4f4f5;
+        background: var(--btn-bg);
     }
 
-    @media (max-width: 420px) {
+    @media (max-width: 440px) {
         body { padding: 14px; }
+
+        .theme-toggle-wrapper {
+            top: 12px;
+            right: 12px;
+        }
 
         .calendar {
             padding: 22px 16px;
@@ -248,6 +333,7 @@
 
         .month-title {
             font-size: 20px;
+            margin-right: 0;
         }
 
         .day-cell {
@@ -263,18 +349,22 @@
 </head>
 
 <body>
+
+<div class="theme-toggle-wrapper">
+    <button class="theme-toggle-btn" id="themeToggle" title="Змінити тему" aria-label="Змінити тему">🌙</button>
+</div>
+
 <div class="calendar style-fill" id="calendar">
     <div class="header">
         <div class="month-title" id="monthTitle"></div>
 
         <div class="header-actions">
-            <!-- Style switch buttons -->
             <div class="style-picker" role="radiogroup" aria-label="Формат вибору">
                 <button class="style-btn fill-btn active" data-style="fill" type="button" aria-checked="true" role="radio">
-                    <span class="preview-icon"></span> Коло
+                    <span class="preview-icon"></span> Круг
                 </button>
                 <button class="style-btn outline-btn" data-style="circle" type="button" aria-checked="false" role="radio">
-                    <span class="preview-icon"></span> Круг
+                    <span class="preview-icon"></span> Коло
                 </button>
             </div>
 
@@ -322,12 +412,32 @@
     const daysContainer = document.getElementById("days");
     const selectedCount = document.getElementById("selectedCount");
     const styleButtons = document.querySelectorAll(".style-btn");
+    const themeToggleBtn = document.getElementById("themeToggle");
+
+    const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    let isDark = systemPrefersDark;
+
+    function applyTheme(dark) {
+        isDark = dark;
+        if (isDark) {
+            document.body.classList.add("dark-theme");
+            themeToggleBtn.textContent = "☀️";
+        } else {
+            document.body.classList.remove("dark-theme");
+            themeToggleBtn.textContent = "🌙";
+        }
+    }
+
+    applyTheme(systemPrefersDark);
+
+    themeToggleBtn.addEventListener("click", () => {
+        applyTheme(!isDark);
+    });
 
     function dateKey(y, m, d) {
         return `${y}-${m}-${d}`;
     }
 
-    // Handle selection style switching
     styleButtons.forEach(btn => {
         btn.addEventListener("click", () => {
             const style = btn.dataset.style;
@@ -357,7 +467,6 @@
         const firstDay = new Date(year, month, 1);
         const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-        // JS: Sunday = 0 -> Monday = 0
         const offset = (firstDay.getDay() + 6) % 7;
 
         for (let i = 0; i < offset; i++) {
